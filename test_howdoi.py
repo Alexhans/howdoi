@@ -146,6 +146,21 @@ class HowdoiTestCase(unittest.TestCase):  # pylint: disable=too-many-public-meth
 
     #     os.environ['HOWDOI_SEARCH_ENGINE'] = ''
 
+    def test_answers_brave(self):
+        print("brave start")
+        os.environ['HOWDOI_SEARCH_ENGINE'] = 'brave'
+        for query in self.queries:
+            self.assertValidResponse(howdoi.howdoi(query))
+        for query in self.bad_queries:
+            self.assertValidResponse(howdoi.howdoi(query))
+
+        os.environ['HOWDOI_URL'] = 'pt.stackoverflow.com'
+        for query in self.pt_queries:
+            self.assertValidResponse(howdoi.howdoi(query))
+
+        os.environ['HOWDOI_SEARCH_ENGINE'] = ''
+        print("brave end")
+
     def test_answer_links_using_l_option(self):
         for query in self.queries:
             response = howdoi.howdoi(query + ' -l')

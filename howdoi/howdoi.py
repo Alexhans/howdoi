@@ -55,7 +55,7 @@ else:
     SCHEME = 'https://'
     VERIFY_SSL_CERTIFICATE = True
 
-SUPPORTED_SEARCH_ENGINES = ('google', 'bing', 'duckduckgo')
+SUPPORTED_SEARCH_ENGINES = ('google', 'bing', 'duckduckgo', 'brave')
 
 URL = os.getenv('HOWDOI_URL') or 'stackoverflow.com'
 
@@ -69,7 +69,8 @@ USER_AGENTS = ('Mozilla/5.0 (Macintosh; Intel Mac OS X 10.7; rv:11.0) Gecko/2010
 SEARCH_URLS = {
     'bing': SCHEME + 'www.bing.com/search?q=site:{0}%20{1}&hl=en',
     'google': SCHEME + 'www.google.com/search?q=site:{0}%20{1}&hl=en',
-    'duckduckgo': SCHEME + 'duckduckgo.com/html?q=site:{0}%20{1}&t=hj&ia=web'
+    'duckduckgo': SCHEME + 'duckduckgo.com/html?q=site:{0}%20{1}&t=hj&ia=web',
+    'brave': SCHEME + 'search.brave.com/search?q=site:{0}%20{1}&source=web'
 }
 
 BLOCK_INDICATORS = (
@@ -263,11 +264,19 @@ def _extract_links_from_duckduckgo(html):
     return results
 
 
+def _extract_links_from_brave(html):
+    link_anchors = html.find("a.result-header")
+    results = [a.attrib["href"] for a in link_anchors]
+    return results
+
+
 def _extract_links(html, search_engine):
     if search_engine == 'bing':
         return _extract_links_from_bing(html)
     if search_engine == 'duckduckgo':
         return _extract_links_from_duckduckgo(html)
+    if search_engine == 'brave':
+        return _extract_links_from_brave(html)
     return _extract_links_from_google(html)
 
 
@@ -684,7 +693,7 @@ def get_parser():
     parser.add_argument('--json-output', action='store_true', help=argparse.SUPPRESS)
     parser.add_argument('-v', '--version', help='display the current version of howdoi',
                         action='store_true')
-    parser.add_argument('-e', '--engine', help='search engine for this query (google, bing, duckduckgo)',
+    parser.add_argument('-e', '--engine', help='search engine for this query (google, bing, duckduckgo, brave)',
                         dest='search_engine', nargs="?", metavar='ENGINE')
     parser.add_argument('--save', '--stash', help='stash a howdoi answer',
                         action='store_true')
@@ -756,7 +765,7 @@ def perform_sanity_check():
     cache = NullCache()
 
     exit_code = 0
-    for engine in ['google']:  # 'bing' and 'duckduckgo' throw various block errors
+    for engine in ['google']:  # 'bing' and 'duckduckgo' throw various block errors # TODO what about brave?
         print(f'Checking {engine}...')
         try:
             _sanity_check(engine)
